@@ -1,6 +1,26 @@
+using Endpoints;
+
 var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddRazorComponents()
+    .AddInteractiveServerComponents();
+builder.Services.AddRazorPages();
+builder.Services.AddControllersWithViews();
+builder.Services.AddOpenApiDocument(settings =>
+{
+    settings.Title = "RDMP API";
+    settings.Version = "v1";
+    settings.Description = "API for RDMP application";
+    settings.DocumentName = "v1";
+});
+
 var app = builder.Build();
 
-app.MapGet("/", () => "Hello World!");
+app.MapUserEndpoints();
+
+if (app.Environment.IsDevelopment())
+{
+    app.UseOpenApi();
+    app.UseSwaggerUi();
+}
 
 app.Run();
