@@ -1,5 +1,6 @@
 using Endpoints;
 using dotenv.net;
+using Services;
 
 DotEnv.Load();
 
@@ -7,7 +8,6 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 builder.Services.AddRazorPages();
-builder.Services.AddControllersWithViews();
 builder.Services.AddOpenApiDocument(settings =>
 {
     settings.Title = "RDMP API";
@@ -15,11 +15,14 @@ builder.Services.AddOpenApiDocument(settings =>
     settings.Description = "API for RDMP application";
     settings.DocumentName = "v1";
 });
+builder.Services.AddHttpClient();
+builder.Services.AddScoped<IAIService, AIService>();
+builder.Services.AddControllers();
 
 var app = builder.Build();
 
-app.MapAIEndpoints();
 app.MapGet("/health", () => "OK");
+app.MapControllers();
 
 if (app.Environment.IsDevelopment())
 {

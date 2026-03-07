@@ -4,11 +4,21 @@ using Data.Entities;
 
 namespace Services;
 
-public class AIService
+public interface IAIService
+{
+    Task<RoadmapResponseDto> GenerateRoadmapAsync(JobPostUrlRequestDto jobPostUrl);
+}
+
+public class AIService : IAIService
 {
     private string GEMINI_API_KEY = Environment.GetEnvironmentVariable("GEMINI_API_KEY") ?? string.Empty;
-    private static readonly HttpClient client = new HttpClient();
+    private readonly HttpClient client;
     private const string GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent";
+
+    public AIService(HttpClient httpClient)
+    {
+        client = httpClient;
+    }
 
     public async Task<RoadmapResponseDto> GenerateRoadmapAsync(JobPostUrlRequestDto jobPostUrl)
     {
