@@ -1,4 +1,7 @@
 using Endpoints;
+using dotenv.net;
+
+DotEnv.Load();
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorComponents()
@@ -15,7 +18,8 @@ builder.Services.AddOpenApiDocument(settings =>
 
 var app = builder.Build();
 
-app.MapUserEndpoints();
+app.MapAIEndpoints();
+app.MapGet("/health", () => "OK");
 
 if (app.Environment.IsDevelopment())
 {
