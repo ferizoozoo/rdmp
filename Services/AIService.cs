@@ -12,9 +12,9 @@ public interface IAIService
 public class AIService : IAIService
 {
     private string GEMINI_API_KEY = Environment.GetEnvironmentVariable("GEMINI_API_KEY") ?? string.Empty;
+    private string GEMINI_API_URL = Environment.GetEnvironmentVariable("GEMINI_API_URL") ?? string.Empty;
     private readonly HttpClient client;
     private readonly ICrawlerService _crawlerService;
-    private const string GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent";
 
     public AIService(HttpClient httpClient, ICrawlerService crawlerService)
     {
@@ -26,7 +26,6 @@ public class AIService : IAIService
     {
         var jobDescription = await _crawlerService.CrawlJobPostingAsync(jobPostUrl.Url);
         var prompt = $"Generate a learning roadmap based on the description of the job posting or about the work from the given job description (don't include any other text): {jobDescription}";
-        Console.WriteLine($"Generated prompt: {prompt}");
 
         var requestBody = new
         {
