@@ -17,6 +17,7 @@ builder.Services.AddOpenApiDocument(settings =>
 });
 builder.Services.AddHttpClient();
 builder.Services.AddScoped<IAIService, AIService>();
+builder.Services.AddScoped<ICrawlerService, CrawlerService>();
 builder.Services.AddControllers();
 
 var app = builder.Build();
