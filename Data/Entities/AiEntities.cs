@@ -1,7 +1,7 @@
 namespace Data.Entities;
 
 public record JobPostUrlRequestDto(
-    string Url
+    string Link
 );
 
 public record RoadmapResponseDto(

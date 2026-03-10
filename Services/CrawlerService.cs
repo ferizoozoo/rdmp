@@ -15,7 +15,9 @@ public class CrawlerService : ICrawlerService
     {
         try
         {
-            IWebDriver driver = new ChromeDriver();
+            var options = new ChromeOptions();
+            options.AddArgument("--headless=new");
+            var driver = new ChromeDriver(options);
 
             driver.Navigate().GoToUrl(url);
 
