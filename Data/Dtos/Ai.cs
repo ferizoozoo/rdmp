@@ -1,4 +1,4 @@
-namespace Data.Entities;
+namespace Data.Dtos;
 
 public record JobPostUrlRequestDto(
     string Link
