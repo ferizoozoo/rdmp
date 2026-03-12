@@ -1,6 +1,7 @@
 using Endpoints;
 using dotenv.net;
 using Services;
+using Middlewares;
 
 DotEnv.Load();
 
@@ -24,12 +25,17 @@ builder.Services.AddCors(options =>
 builder.Services.AddHttpClient();
 builder.Services.AddScoped<IAIService, AIService>();
 builder.Services.AddScoped<ICrawlerService, CrawlerService>();
+builder.Services.AddSingleton<IJwtService, JwtService>();
 builder.Services.AddControllers();
 
 
 var app = builder.Build();
 
 app.MapGet("/health", () => "OK");
+
+app.UseMiddleware<JwtMiddleware>();
+app.UseAuthorization();
+
 app.MapControllers();
 
 if (app.Environment.IsDevelopment())
