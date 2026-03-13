@@ -2,6 +2,7 @@ using Endpoints;
 using dotenv.net;
 using Services;
 using Middlewares;
+using Data.Database;
 
 DotEnv.Load();
 
@@ -22,6 +23,7 @@ builder.Services.AddCors(options =>
                .AllowAnyHeader();
     });
 });
+builder.Services.AddDbContext<RdmpContext>();
 builder.Services.AddHttpClient();
 builder.Services.AddScoped<IAIService, AIService>();
 builder.Services.AddScoped<ICrawlerService, CrawlerService>();

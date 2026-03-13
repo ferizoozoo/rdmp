@@ -55,3 +55,9 @@ CodeCoverage/
 *.VisualState.xml
 TestResult.xml
 nunit-*.xml
+
+# Database
+*.db*
+
+# Visual Studio Code
+.vscode/*
