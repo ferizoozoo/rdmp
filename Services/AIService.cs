@@ -25,13 +25,15 @@ public class AIService : IAIService
     public async Task<RoadmapResponseDto> GenerateRoadmapAsync(JobPostUrlRequestDto jobPostUrl)
     {
         string jobDescriptions = string.Empty;
+
         foreach (var link in jobPostUrl.Links)
         {
             jobDescriptions += await _crawlerService.CrawlJobPostingAsync(link);
         }
+
         var prompt = $@"Generate a learning roadmap based on the description of
          the links containing the job posting or about the work from the given job descriptions (don't
-         include any other text): {jobDescriptions}
+         include any other text) (these are links and not descriptions) (search for the links and get the result from these job postings urls): {jobDescriptions}
          The roadmap should be in a format that can be easily parsed and displayed in a user interface.
          The roadmap should include the following sections:
          1. Skills: A list of skills required for the job, along with a brief description of each skill and resources for learning them.
@@ -85,6 +87,7 @@ public class AIService : IAIService
         string jsonPayload = JsonSerializer.Serialize(requestBody);
 
         var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
+        Console.WriteLine($"Request Payload: {jsonPayload}"); // Log the request payload for debugging
 
         var request = new HttpRequestMessage(HttpMethod.Post, GEMINI_API_URL)
         {
@@ -98,6 +101,7 @@ public class AIService : IAIService
             HttpResponseMessage response = await client.SendAsync(request);
             response.EnsureSuccessStatusCode();
             string responseBody = await response.Content.ReadAsStringAsync();
+            Console.WriteLine($"Response Body: {responseBody}"); // Log the response body for debugging
             var responseJson = JsonDocument.Parse(responseBody);
             var roadmap = responseJson.RootElement.GetProperty("candidates")[0].GetProperty("content").GetProperty("parts")[0].GetProperty("text").GetString();
             return new RoadmapResponseDto(roadmap);
