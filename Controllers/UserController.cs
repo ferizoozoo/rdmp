@@ -15,6 +15,14 @@ public class UserController : ControllerBase
         _userService = userService;
     }
 
+    [HttpPost("login")]
+    public async Task<IActionResult> Login([FromBody] LoginRequest request)
+     => new JsonResult(await _userService.Login(request.Email, request.Password));
+
+    [HttpPost("register")]
+    public async Task<IActionResult> Register([FromBody] RegisterRequest request)
+     => new JsonResult(await _userService.Register(request.Email, request.Password));
+
     [HttpGet("all")]
     public async Task<IActionResult> GetUsers()
      => new JsonResult(await _userService.GetUsers());

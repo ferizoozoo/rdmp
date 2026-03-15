@@ -1,11 +1,14 @@
 using Data.Database;
 using Data.Entities;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity;
 
 namespace Services;
 
 public interface IUserService
 {
+    Task<User> Login(string email, string password);
+    Task<bool> Register(string email, string password);
     Task<List<User>> GetUsers();
     Task<User> AddUser(User user);
     Task<User> UpdateUser(int id, User user);
@@ -18,6 +21,23 @@ public class UserService : IUserService
 
     public UserService(RdmpContext context)
         => _context = context;
+
+    public async Task<User> Login(string email, string password)
+    {
+        var hasher = new PasswordHasher<object>();
+        var passwordHash = hasher.HashPassword(null, password);
+        return await _context.Users.FirstOrDefaultAsync(u => u.Email == email && u.PasswordHash == passwordHash);
+    }
+
+    public async Task<bool> Register(string email, string password)
+    {
+        var hasher = new PasswordHasher<object>();
+        var passwordHash = hasher.HashPassword(null, password);
+        var user = new User { Email = email, PasswordHash = passwordHash };
+        _context.Users.Add(user);
+        await _context.SaveChangesAsync();
+        return true;
+    }
 
     public async Task<List<User>> GetUsers()
         => await _context.Users.ToListAsync();
