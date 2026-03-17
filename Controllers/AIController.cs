@@ -1,5 +1,6 @@
 using Data.Dtos;
 using Data.Entities;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Services;
 
@@ -16,6 +17,7 @@ public class AIController : ControllerBase
         this.aiService = aiService;
     }
 
+    [Authorize]
     [HttpPost("roadmap")]
     public async Task<IActionResult> SendPrompt([FromBody] JobPostUrlRequestDto request)
     {

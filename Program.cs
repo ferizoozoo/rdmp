@@ -1,7 +1,8 @@
 using dotenv.net;
+using Authentication;
 using Services;
-using Middlewares;
 using Data.Database;
+using Microsoft.AspNetCore.Authentication;
 
 DotEnv.Load();
 
@@ -31,12 +32,23 @@ builder.Services.AddScoped<IRoadmapService, RoadmapService>();
 builder.Services.AddSingleton<IJwtService, JwtService>();
 builder.Services.AddControllers();
 
+builder.Services
+    .AddAuthentication(options =>
+    {
+        options.DefaultScheme = "Jwt";
+        options.DefaultAuthenticateScheme = "Jwt";
+        options.DefaultChallengeScheme = "Jwt";
+    })
+    .AddScheme<AuthenticationSchemeOptions, JwtAuthenticationHandler>("Jwt", _ => { });
+
+builder.Services.AddAuthorization();
+
 
 var app = builder.Build();
 
 app.MapGet("/health", () => "OK");
 
-app.UseMiddleware<JwtMiddleware>();
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

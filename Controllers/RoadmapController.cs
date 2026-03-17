@@ -1,4 +1,5 @@
 using Data.Entities;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Services;
 
@@ -15,18 +16,22 @@ public class RoadmapController : ControllerBase
         _roadmapService = roadmapService;
     }
 
+    [Authorize]
     [HttpGet("all")]
     public async Task<IActionResult> GetRoadmaps()
      => new JsonResult(await _roadmapService.GetRoadmaps());
 
+    [Authorize]
     [HttpPost("add")]
     public async Task<IActionResult> AddRoadmap([FromBody] Roadmap roadmap)
      => new JsonResult(await _roadmapService.AddRoadmap(roadmap));
 
+    [Authorize]
     [HttpPut("update/{id}")]
     public async Task<IActionResult> UpdateRoadmap(int id, [FromBody] Roadmap roadmap)
      => new JsonResult(await _roadmapService.UpdateRoadmap(id, roadmap));
 
+    [Authorize]
     [HttpDelete("delete/{id}")]
     public async Task<IActionResult> DeleteRoadmap(int id)
      => new JsonResult(await _roadmapService.DeleteRoadmap(id));

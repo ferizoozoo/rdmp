@@ -62,8 +62,9 @@ public class JwtService : IJwtService
             var claim = principal.FindFirst("userId")?.Value;
             return claim != null && int.TryParse(claim, out userId);
         }
-        catch
+        catch (Exception e)
         {
+            Console.WriteLine($"Token validation error: {e.Message}");
             return false;
         }
     }

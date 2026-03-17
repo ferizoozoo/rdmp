@@ -26,7 +26,6 @@ public class CrawlerService : ICrawlerService
             // TODO: the main issue here is that for using on many links, each has its own class or id 
             var jobDescription = driver.FindElement(By.ClassName("job-posting-details-body"));
             var jobDescriptionText = jobDescription.GetAttribute("innerText");
-            Console.WriteLine($"Crawled job posting: {jobDescriptionText}");
 
             if (jobDescriptionText == string.Empty)
             {

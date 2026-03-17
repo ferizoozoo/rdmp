@@ -87,7 +87,6 @@ public class AIService : IAIService
         string jsonPayload = JsonSerializer.Serialize(requestBody);
 
         var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
-        Console.WriteLine($"Request Payload: {jsonPayload}"); // Log the request payload for debugging
 
         var request = new HttpRequestMessage(HttpMethod.Post, GEMINI_API_URL)
         {
@@ -101,7 +100,6 @@ public class AIService : IAIService
             HttpResponseMessage response = await client.SendAsync(request);
             response.EnsureSuccessStatusCode();
             string responseBody = await response.Content.ReadAsStringAsync();
-            Console.WriteLine($"Response Body: {responseBody}"); // Log the response body for debugging
             var responseJson = JsonDocument.Parse(responseBody);
             var roadmap = responseJson.RootElement.GetProperty("candidates")[0].GetProperty("content").GetProperty("parts")[0].GetProperty("text").GetString();
             return new RoadmapResponseDto(roadmap);

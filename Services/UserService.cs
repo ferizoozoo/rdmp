@@ -7,8 +7,8 @@ namespace Services;
 
 public interface IUserService
 {
-    Task<User> Login(string email, string password);
-    Task<bool> Register(string email, string password);
+    Task<string> Login(string email, string password);
+    Task<string> Register(string email, string password);
     Task<List<User>> GetUsers();
     Task<User> AddUser(User user);
     Task<User> UpdateUser(int id, User user);
@@ -18,25 +18,51 @@ public interface IUserService
 public class UserService : IUserService
 {
     private readonly RdmpContext _context;
+    private readonly IJwtService _jwtService;
+    private readonly PasswordHasher<User> _passwordHasher;
 
-    public UserService(RdmpContext context)
-        => _context = context;
-
-    public async Task<User> Login(string email, string password)
+    public UserService(RdmpContext context, IJwtService jwtService)
     {
-        var hasher = new PasswordHasher<object>();
-        var passwordHash = hasher.HashPassword(null, password);
-        return await _context.Users.FirstOrDefaultAsync(u => u.Email == email && u.PasswordHash == passwordHash);
+        _jwtService = jwtService;
+        _context = context;
+        _passwordHasher = new PasswordHasher<User>();
     }
 
-    public async Task<bool> Register(string email, string password)
+    public async Task<string> Login(string email, string password)
     {
-        var hasher = new PasswordHasher<object>();
-        var passwordHash = hasher.HashPassword(null, password);
-        var user = new User { Email = email, PasswordHash = passwordHash };
+        email = email.Trim().ToLowerInvariant();
+
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+        if (user is null)
+        {
+            return null;
+        }
+
+        var verificationResult = _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, password);
+        if (verificationResult == PasswordVerificationResult.Failed)
+        {
+            return null;
+        }
+
+        return _jwtService.GenerateAccessToken(user.Id);
+    }
+
+    public async Task<string> Register(string email, string password)
+    {
+        email = email.Trim().ToLowerInvariant();
+
+        var existingUser = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+        if (existingUser is not null)
+        {
+            return null;
+        }
+
+        var user = new User { Email = email };
+        var passwordHash = _passwordHasher.HashPassword(user, password);
+        user.PasswordHash = passwordHash;
         _context.Users.Add(user);
         await _context.SaveChangesAsync();
-        return true;
+        return _jwtService.GenerateAccessToken(user.Id);
     }
 
     public async Task<List<User>> GetUsers()
