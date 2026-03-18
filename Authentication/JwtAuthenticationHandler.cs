@@ -23,12 +23,21 @@ public class JwtAuthenticationHandler : AuthenticationHandler<AuthenticationSche
     protected override Task<AuthenticateResult> HandleAuthenticateAsync()
     {
         var authorizationHeader = Request.Headers.Authorization.FirstOrDefault();
-        if (string.IsNullOrWhiteSpace(authorizationHeader) || !authorizationHeader.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+        if (string.IsNullOrWhiteSpace(authorizationHeader))
         {
             return Task.FromResult(AuthenticateResult.NoResult());
         }
 
-        var token = authorizationHeader["Bearer ".Length..].Trim();
+        // Accept either "Bearer <token>" or a raw token value to reduce client-side formatting issues.
+        var token = authorizationHeader.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase)
+            ? authorizationHeader["Bearer ".Length..].Trim()
+            : authorizationHeader.Trim();
+
+        if (string.IsNullOrWhiteSpace(token))
+        {
+            return Task.FromResult(AuthenticateResult.NoResult());
+        }
+
         if (!_jwtService.ValidateAccessToken(token, out var userId))
         {
             return Task.FromResult(AuthenticateResult.Fail("Invalid JWT token."));

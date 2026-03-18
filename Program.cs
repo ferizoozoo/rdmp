@@ -48,6 +48,7 @@ var app = builder.Build();
 
 app.MapGet("/health", () => "OK");
 
+app.UseCors();
 app.UseAuthentication();
 app.UseAuthorization();
 
@@ -58,6 +59,5 @@ if (app.Environment.IsDevelopment())
     app.UseOpenApi();
     app.UseSwaggerUi();
 }
-app.UseCors();
 
 app.Run();

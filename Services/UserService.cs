@@ -10,6 +10,7 @@ public interface IUserService
     Task<string> Login(string email, string password);
     Task<string> Register(string email, string password);
     Task<List<User>> GetUsers();
+    Task<User> GetById(int id);
     Task<User> AddUser(User user);
     Task<User> UpdateUser(int id, User user);
     Task<bool> DeleteUser(int id);
@@ -103,4 +104,7 @@ public class UserService : IUserService
         await _context.SaveChangesAsync();
         return true;
     }
+
+    public async Task<User> GetById(int id)
+        => await _context.Users.FindAsync(id);
 }

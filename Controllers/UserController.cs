@@ -30,6 +30,11 @@ public class UserController : ControllerBase
      => new JsonResult(await _userService.GetUsers());
 
     [Authorize]
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetUser(int id)
+     => new JsonResult(await _userService.GetById(id));
+
+    [Authorize]
     [HttpPost("add")]
     public async Task<IActionResult> AddUser([FromBody] User user)
      => new JsonResult(await _userService.AddUser(user));
