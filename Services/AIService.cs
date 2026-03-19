@@ -1,12 +1,14 @@
+using System.Linq.Expressions;
 using System.Text;
 using System.Text.Json;
 using Data.Dtos;
+using Data.Entities;
 
 namespace Services;
 
 public interface IAIService
 {
-    Task<RoadmapResponseDto> GenerateRoadmapAsync(JobPostUrlRequestDto jobPostUrl);
+    Task<RoadmapResponseDto> GenerateRoadmapAsync(JobPostUrlRequestDto jobPostUrl, int userId);
 }
 
 public class AIService : IAIService
@@ -15,14 +17,16 @@ public class AIService : IAIService
     private string GEMINI_API_URL = Environment.GetEnvironmentVariable("GEMINI_API_URL") ?? string.Empty;
     private readonly HttpClient client;
     private readonly ICrawlerService _crawlerService;
+    private readonly IRoadmapService _roadmapService;
 
-    public AIService(HttpClient httpClient, ICrawlerService crawlerService)
+    public AIService(HttpClient httpClient, ICrawlerService crawlerService, IRoadmapService roadmapService)
     {
         client = httpClient;
         _crawlerService = crawlerService;
+        _roadmapService = roadmapService;
     }
 
-    public async Task<RoadmapResponseDto> GenerateRoadmapAsync(JobPostUrlRequestDto jobPostUrl)
+    public async Task<RoadmapResponseDto> GenerateRoadmapAsync(JobPostUrlRequestDto jobPostUrl, int userId)
     {
         string jobDescriptions = string.Empty;
 
@@ -85,6 +89,14 @@ public class AIService : IAIService
         };
 
         string jsonPayload = JsonSerializer.Serialize(requestBody);
+
+        // save the roadmap to the database
+        var roadmapContent = new Roadmap
+        {
+            Content = jsonPayload,
+            UserId = userId
+        };
+        await _roadmapService.AddRoadmap(roadmapContent);
 
         var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
 

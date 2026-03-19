@@ -1,5 +1,6 @@
 using Data.Dtos;
 using Data.Entities;
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Services;
@@ -21,7 +22,13 @@ public class AIController : ControllerBase
     [HttpPost("roadmap")]
     public async Task<IActionResult> SendPrompt([FromBody] JobPostUrlRequestDto request)
     {
-        var roadmap = await aiService.GenerateRoadmapAsync(request);
+        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("userId");
+        if (!int.TryParse(userIdClaim, out var userId))
+        {
+            return Unauthorized("User id claim is missing or invalid.");
+        }
+
+        var roadmap = await aiService.GenerateRoadmapAsync(request, userId);
         return Ok(roadmap);
     }
 }
