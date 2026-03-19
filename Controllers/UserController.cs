@@ -18,11 +18,15 @@ public class UserController : ControllerBase
 
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
-     => new JsonResult(await _userService.Login(request.Email, request.Password));
+     => new JsonResult(await _userService.Login(request));
 
     [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] RegisterRequest request)
-     => new JsonResult(await _userService.Register(request.Email, request.Password));
+     => new JsonResult(await _userService.Register(request));
+
+    [HttpPost("refresh")]
+    public async Task<IActionResult> Refresh([FromBody] RefreshRequest request)
+         => new JsonResult(await _userService.Refresh(request));
 
     [Authorize]
     [HttpGet("all")]

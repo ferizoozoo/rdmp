@@ -7,5 +7,6 @@ public class User
     public string Lastname { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
     public string PasswordHash { get; set; } = string.Empty;
+    public string? RefreshToken { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }

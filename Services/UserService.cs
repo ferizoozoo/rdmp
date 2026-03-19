@@ -7,10 +7,11 @@ namespace Services;
 
 public interface IUserService
 {
-    Task<string> Login(string email, string password);
-    Task<string> Register(string email, string password);
-    Task<List<User>> GetUsers();
+    Task<LoginResponse> Login(LoginRequest request);
+    Task<RegisterResponse> Register(RegisterRequest request);
+    Task<RefreshResponse> Refresh(RefreshRequest request);
     Task<User> GetById(int id);
+    Task<List<User>> GetUsers();
     Task<User> AddUser(User user);
     Task<User> UpdateUser(int id, User user);
     Task<bool> DeleteUser(int id);
@@ -29,9 +30,9 @@ public class UserService : IUserService
         _passwordHasher = new PasswordHasher<User>();
     }
 
-    public async Task<string> Login(string email, string password)
+    public async Task<LoginResponse> Login(LoginRequest request)
     {
-        email = email.Trim().ToLowerInvariant();
+        var email = request.Email.Trim().ToLowerInvariant();
 
         var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
         if (user is null)
@@ -39,18 +40,29 @@ public class UserService : IUserService
             return null;
         }
 
-        var verificationResult = _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, password);
+        var verificationResult = _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, request.Password);
         if (verificationResult == PasswordVerificationResult.Failed)
         {
             return null;
         }
 
-        return _jwtService.GenerateAccessToken(user.Id);
+        var refreshToken = _jwtService.GenerateRefreshToken();
+        user.RefreshToken = refreshToken;
+        await _context.SaveChangesAsync();
+
+        var accessToken = _jwtService.GenerateAccessToken(user.Id);
+
+        return new LoginResponse
+        {
+            AccessToken = accessToken,
+            RefreshToken = refreshToken
+        };
     }
 
-    public async Task<string> Register(string email, string password)
+    public async Task<RegisterResponse> Register(RegisterRequest request)
     {
-        email = email.Trim().ToLowerInvariant();
+        var email = request.Email.Trim().ToLowerInvariant();
+        var password = request.Password;
 
         var existingUser = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
         if (existingUser is not null)
@@ -61,9 +73,44 @@ public class UserService : IUserService
         var user = new User { Email = email };
         var passwordHash = _passwordHasher.HashPassword(user, password);
         user.PasswordHash = passwordHash;
+        user.RefreshToken = _jwtService.GenerateRefreshToken();
         _context.Users.Add(user);
         await _context.SaveChangesAsync();
-        return _jwtService.GenerateAccessToken(user.Id);
+
+        var accessToken = _jwtService.GenerateAccessToken(user.Id);
+
+        return new RegisterResponse
+        {
+            AccessToken = accessToken,
+            RefreshToken = user.RefreshToken
+        };
+    }
+
+    public async Task<User> GetById(int id)
+            => await _context.Users.FindAsync(id);
+
+    public async Task<RefreshResponse> Refresh(RefreshRequest request)
+    {
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.RefreshToken == request.RefreshToken);
+        if (user is null || !_jwtService.ValidateRefreshToken(request.RefreshToken))
+        {
+            return null;
+        }
+
+        var accessToken = _jwtService.GenerateAccessToken(user.Id);
+        var refreshToken = _jwtService.GenerateRefreshToken();
+
+        if (user != null)
+        {
+            user.RefreshToken = refreshToken;
+            await _context.SaveChangesAsync();
+        }
+
+        return new RefreshResponse
+        {
+            AccessToken = accessToken,
+            RefreshToken = refreshToken
+        };
     }
 
     public async Task<List<User>> GetUsers()
@@ -105,6 +152,5 @@ public class UserService : IUserService
         return true;
     }
 
-    public async Task<User> GetById(int id)
-        => await _context.Users.FindAsync(id);
+
 }
