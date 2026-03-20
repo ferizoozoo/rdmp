@@ -10,8 +10,8 @@ public interface IJwtService
 {
     string GenerateAccessToken(int userId);
     bool ValidateAccessToken(string token, out int userId);
-    string GenerateRefreshToken();
-    bool ValidateRefreshToken(string token);
+    (string token, DateTime expiry) GenerateRefreshToken();
+    bool ValidateRefreshToken(string token, DateTime expiry);
 }
 
 public class JwtService : IJwtService
@@ -69,19 +69,18 @@ public class JwtService : IJwtService
         }
     }
 
-    public string GenerateRefreshToken()
+    public (string token, DateTime expiry) GenerateRefreshToken()
     {
         var token = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64));
-        _refreshTokens[token] = DateTime.UtcNow.AddMinutes(_refreshTokenExpirationMinutes);
-        return token;
+        var expiry = DateTime.UtcNow.AddMinutes(_refreshTokenExpirationMinutes);
+        return (token, expiry);
     }
 
-    public bool ValidateRefreshToken(string token)
+    public bool ValidateRefreshToken(string token, DateTime expiry)
     {
-        if (_refreshTokens.TryGetValue(token, out var expiry) && expiry > DateTime.UtcNow)
+        if (expiry > DateTime.UtcNow)
             return true;
 
-        _refreshTokens.Remove(token); // clean up expired
         return false;
     }
 }

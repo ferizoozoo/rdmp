@@ -11,6 +11,7 @@ public interface IUserService
     Task<RegisterResponse> Register(RegisterRequest request);
     Task<RefreshResponse> Refresh(RefreshRequest request);
     Task<User> GetById(int id);
+    Task<User> GetByRefreshToken(string refreshToken);
     Task<List<User>> GetUsers();
     Task<User> AddUser(User user);
     Task<User> UpdateUser(int id, User user);
@@ -46,8 +47,9 @@ public class UserService : IUserService
             return null;
         }
 
-        var refreshToken = _jwtService.GenerateRefreshToken();
+        var (refreshToken, refreshTokenExpiry) = _jwtService.GenerateRefreshToken();
         user.RefreshToken = refreshToken;
+        user.RefreshTokenExpiry = refreshTokenExpiry;
         await _context.SaveChangesAsync();
 
         var accessToken = _jwtService.GenerateAccessToken(user.Id);
@@ -73,7 +75,9 @@ public class UserService : IUserService
         var user = new User { Email = email };
         var passwordHash = _passwordHasher.HashPassword(user, password);
         user.PasswordHash = passwordHash;
-        user.RefreshToken = _jwtService.GenerateRefreshToken();
+        (string refreshToken, DateTime refreshTokenExpiry) = _jwtService.GenerateRefreshToken();
+        user.RefreshToken = refreshToken;
+        user.RefreshTokenExpiry = refreshTokenExpiry;
         _context.Users.Add(user);
         await _context.SaveChangesAsync();
 
@@ -92,17 +96,22 @@ public class UserService : IUserService
     public async Task<RefreshResponse> Refresh(RefreshRequest request)
     {
         var user = await _context.Users.FirstOrDefaultAsync(u => u.RefreshToken == request.RefreshToken);
-        if (user is null || !_jwtService.ValidateRefreshToken(request.RefreshToken))
+
+        if (user is null ||
+             user.RefreshTokenExpiry is null ||
+             !_jwtService.ValidateRefreshToken(request.RefreshToken, user.RefreshTokenExpiry.Value
+             ))
         {
             return null;
         }
 
         var accessToken = _jwtService.GenerateAccessToken(user.Id);
-        var refreshToken = _jwtService.GenerateRefreshToken();
+        (string refreshToken, DateTime refreshTokenExpiry) = _jwtService.GenerateRefreshToken();
 
         if (user != null)
         {
             user.RefreshToken = refreshToken;
+            user.RefreshTokenExpiry = refreshTokenExpiry;
             await _context.SaveChangesAsync();
         }
 
@@ -112,6 +121,9 @@ public class UserService : IUserService
             RefreshToken = refreshToken
         };
     }
+
+    public async Task<User> GetByRefreshToken(string refreshToken)
+        => await _context.Users.FirstOrDefaultAsync(u => u.RefreshToken == refreshToken);
 
     public async Task<List<User>> GetUsers()
         => await _context.Users.ToListAsync();
