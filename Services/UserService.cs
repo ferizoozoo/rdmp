@@ -2,6 +2,7 @@ using Data.Database;
 using Data.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
+using Data.Dtos;
 
 namespace Services;
 

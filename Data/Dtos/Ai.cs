@@ -5,5 +5,6 @@ public record JobPostUrlRequestDto(
 );
 
 public record RoadmapResponseDto(
+    int Id,
     string Roadmap
 );

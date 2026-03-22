@@ -90,14 +90,6 @@ public class AIService : IAIService
 
         string jsonPayload = JsonSerializer.Serialize(requestBody);
 
-        // save the roadmap to the database
-        var roadmapContent = new Roadmap
-        {
-            Content = jsonPayload,
-            UserId = userId
-        };
-        await _roadmapService.AddRoadmap(roadmapContent);
-
         var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
 
         var request = new HttpRequestMessage(HttpMethod.Post, GEMINI_API_URL)
@@ -114,12 +106,20 @@ public class AIService : IAIService
             string responseBody = await response.Content.ReadAsStringAsync();
             var responseJson = JsonDocument.Parse(responseBody);
             var roadmap = responseJson.RootElement.GetProperty("candidates")[0].GetProperty("content").GetProperty("parts")[0].GetProperty("text").GetString();
-            return new RoadmapResponseDto(roadmap);
+
+            var roadmapContent = new Roadmap
+            {
+                Content = roadmap ?? string.Empty,
+                UserId = userId
+            };
+            var finalRoadmap = await _roadmapService.AddRoadmap(roadmapContent);
+
+            return new RoadmapResponseDto(finalRoadmap.Id, finalRoadmap.Content);
         }
         catch (HttpRequestException e)
         {
             Console.WriteLine($"Request error: {e.Message}");
-            return new RoadmapResponseDto("Failed to generate roadmap.");
+            return new RoadmapResponseDto(0, "Failed to generate roadmap.");
         }
     }
 }
