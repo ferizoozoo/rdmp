@@ -22,6 +22,16 @@ public class RoadmapController : ControllerBase
      => new JsonResult(await _roadmapService.GetRoadmaps());
 
     [Authorize]
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetRoadmap(int id)
+     => new JsonResult(await _roadmapService.GetRoadmap(id));
+
+    [Authorize]
+    [HttpGet("user/{userId}")]
+    public async Task<IActionResult> GetRoadmapByUserId(int userId)
+     => new JsonResult(await _roadmapService.GetRoadmapByUserId(userId));
+
+    [Authorize]
     [HttpPost("add")]
     public async Task<IActionResult> AddRoadmap([FromBody] Roadmap roadmap)
      => new JsonResult(await _roadmapService.AddRoadmap(roadmap));

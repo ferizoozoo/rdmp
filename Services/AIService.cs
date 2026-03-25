@@ -1,4 +1,3 @@
-using System.Linq.Expressions;
 using System.Text;
 using System.Text.Json;
 using Data.Dtos;
@@ -28,24 +27,45 @@ public class AIService : IAIService
 
     public async Task<RoadmapResponseDto> GenerateRoadmapAsync(JobPostUrlRequestDto jobPostUrl, int userId)
     {
-        string jobDescriptions = string.Empty;
+        var inputSegments = new List<string>();
 
-        foreach (var link in jobPostUrl.Links)
+        if (!string.IsNullOrWhiteSpace(jobPostUrl.Description))
         {
-            jobDescriptions += await _crawlerService.CrawlJobPostingAsync(link);
+            inputSegments.Add(jobPostUrl.Description.Trim());
         }
 
-        var prompt = $@"Generate a learning roadmap based on the description of
-         the links containing the job posting or about the work from the given job descriptions (don't
-         include any other text) (these are links and not descriptions) (search for the links and get the result from these job postings urls): {jobDescriptions}
+        if (jobPostUrl.Links is not null)
+        {
+            foreach (var link in jobPostUrl.Links.Where(link => !string.IsNullOrWhiteSpace(link)))
+            {
+                var crawledDescription = await _crawlerService.CrawlJobPostingAsync(link);
+                if (!string.IsNullOrWhiteSpace(crawledDescription))
+                {
+                    inputSegments.Add(crawledDescription.Trim());
+                }
+            }
+        }
+
+        if (inputSegments.Count == 0)
+        {
+            return new RoadmapResponseDto(0, "Provide at least one job posting link or a job description.");
+        }
+
+        var jobContext = string.Join("\n\n", inputSegments);
+
+        var prompt = $@"Generate a learning roadmap from the job information below.
+         The input may come from job posting links that were already crawled into text, a pasted job description, or both.
+         Use only the job information provided here as the source context:
+         {jobContext}
          The roadmap should be in a format that can be easily parsed and displayed in a user interface.
          The roadmap should include the following sections:
          1. Skills: A list of skills required for the job, along with a brief description of each skill and resources for learning them.
          2. Projects: A list of project ideas that can help someone build a portfolio relevant to the job, along with a brief description of each project and resources for learning how to build them.
          3. Timeline: A suggested timeline for learning the skills and building the projects, based on the typical experience level required for the job.
-         The roadmap should be concise and focused on the most important skills and projects for the job, and should not include any extraneous information. The roadmap should be formatted in a way
-         that is easy to read and understand, with clear headings and bullet points for each section. The roadmap should be tailored
-         remove the stars. please only generate the result in JSON format, without any additional text or explanations. The JSON should have the following structure:
+         The roadmap should be concise and focused on the most important skills and projects for the job, and should not include any extraneous information.
+         Remove markdown formatting such as code fences or asterisks.
+         Only generate valid JSON, without any additional text or explanations.
+         The JSON should have the following structure:
          {{
             ""skills"": [
                 {{

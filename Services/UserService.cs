@@ -103,7 +103,7 @@ public class UserService : IUserService
              !_jwtService.ValidateRefreshToken(request.RefreshToken, user.RefreshTokenExpiry.Value
              ))
         {
-            return null;
+            return new RefreshResponse { RefreshToken = null, AccessToken = null };
         }
 
         var accessToken = _jwtService.GenerateAccessToken(user.Id);

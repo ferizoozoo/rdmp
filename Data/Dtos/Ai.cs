@@ -1,7 +1,8 @@
 namespace Data.Dtos;
 
 public record JobPostUrlRequestDto(
-    List<string> Links
+    List<string>? Links,
+    string? Description
 );
 
 public record RoadmapResponseDto(
