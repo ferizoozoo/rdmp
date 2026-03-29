@@ -9,6 +9,7 @@ public interface IRoadmapService
     Task<List<Roadmap>> GetRoadmaps();
     Task<Roadmap> GetRoadmap(int id);
     Task<Roadmap> GetRoadmapByUserId(int userId);
+    public Task<List<Roadmap>> GetRoadmapsByUserId(int userId);
     Task<Roadmap> AddRoadmap(Roadmap roadmap);
     Task<Roadmap> UpdateRoadmap(int id, Roadmap roadmap);
     Task<bool> DeleteRoadmap(int id);
@@ -31,6 +32,13 @@ public class RoadmapService : IRoadmapService
 
     public async Task<Roadmap> GetRoadmapByUserId(int userId)
         => await _context.Roadmaps.FirstOrDefaultAsync(r => r.UserId == userId);
+
+    public async Task<List<Roadmap>> GetRoadmapsByUserId(int userId)
+            => await _context.Roadmaps
+                .Where(r => r.UserId == userId)
+                .OrderByDescending(r => r.Id)
+                .AsNoTracking()
+                .ToListAsync();
 
     public async Task<Roadmap> AddRoadmap(Roadmap roadmap)
     {
