@@ -25,8 +25,10 @@ builder.Services.AddCors(options =>
 });
 builder.Services.AddDbContext<RdmpContext>();
 builder.Services.AddHttpClient();
+builder.Services.AddHttpClient<ITrelloService, TrelloService>();
 builder.Services.AddScoped<IAIService, AIService>();
 builder.Services.AddScoped<ICrawlerService, CrawlerService>();
+builder.Services.AddScoped<ITrelloConnectionService, TrelloConnectionService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IRoadmapService, RoadmapService>();
 builder.Services.AddSingleton<IJwtService, JwtService>();

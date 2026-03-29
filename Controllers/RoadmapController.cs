@@ -1,6 +1,7 @@
 using Data.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 using Services;
 
 namespace Controllers;
@@ -37,6 +38,12 @@ public class RoadmapController : ControllerBase
          => new JsonResult(await _roadmapService.GetRoadmapsByUserId(userId));
 
     [Authorize]
+    [HttpPost("export/trello/{roadmapId}")]
+    public async Task<IActionResult> ExportToTrello(int roadmapId)
+        => new JsonResult(await _roadmapService.ExportToTrello(roadmapId, GetCurrentUserId()));
+
+
+    [Authorize]
     [HttpPost("add")]
     public async Task<IActionResult> AddRoadmap([FromBody] Roadmap roadmap)
      => new JsonResult(await _roadmapService.AddRoadmap(roadmap));
@@ -51,4 +58,14 @@ public class RoadmapController : ControllerBase
     public async Task<IActionResult> DeleteRoadmap(int id)
      => new JsonResult(await _roadmapService.DeleteRoadmap(id));
 
+    private int GetCurrentUserId()
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("userId");
+        if (!int.TryParse(userId, out var parsedUserId))
+        {
+            throw new UnauthorizedAccessException("Authenticated user id is missing.");
+        }
+
+        return parsedUserId;
+    }
 }

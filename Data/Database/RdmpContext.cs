@@ -9,6 +9,7 @@ public class RdmpContext : DbContext
 
     public DbSet<User> Users { get; set; }
     public DbSet<Roadmap> Roadmaps { get; set; }
+    public DbSet<TrelloConnection> TrelloConnections { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder options)
             => options.UseSqlite($"Data Source=rdmp.db");

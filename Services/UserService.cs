@@ -70,7 +70,7 @@ public class UserService : IUserService
         var existingUser = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
         if (existingUser is not null)
         {
-            return null;
+            throw new Exception("User with this email already exists.");
         }
 
         var user = new User { Email = email };

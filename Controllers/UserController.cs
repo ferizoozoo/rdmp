@@ -2,6 +2,7 @@ using Data.Dtos;
 using Data.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 using Services;
 
 namespace Controllers;
@@ -11,10 +12,14 @@ namespace Controllers;
 public class UserController : ControllerBase
 {
     private readonly IUserService _userService;
+    private readonly ITrelloConnectionService _trelloConnectionService;
 
-    public UserController(IUserService userService)
+    public UserController(
+        IUserService userService,
+        ITrelloConnectionService trelloConnectionService)
     {
         _userService = userService;
+        _trelloConnectionService = trelloConnectionService;
     }
 
     [HttpPost("login")]
@@ -28,6 +33,38 @@ public class UserController : ControllerBase
     [HttpPost("refresh")]
     public async Task<IActionResult> Refresh([FromBody] RefreshRequest request)
          => new JsonResult(await _userService.Refresh(request));
+
+    [Authorize]
+    [HttpPost("trello/connect")]
+    public async Task<IActionResult> ConnectTrello([FromBody] TrelloConnectRequest request)
+    {
+        try
+        {
+            return new JsonResult(await _trelloConnectionService.Connect(GetCurrentUserId(), request.Token));
+        }
+        catch (KeyNotFoundException exception)
+        {
+            return NotFound(new { message = exception.Message });
+        }
+        catch (UnauthorizedAccessException exception)
+        {
+            return Unauthorized(new { message = exception.Message });
+        }
+        catch (InvalidOperationException exception)
+        {
+            return BadRequest(new { message = exception.Message });
+        }
+    }
+
+    [Authorize]
+    [HttpGet("trello/status")]
+    public async Task<IActionResult> GetTrelloStatus()
+        => new JsonResult(await _trelloConnectionService.GetStatus(GetCurrentUserId()));
+
+    [Authorize]
+    [HttpDelete("trello/disconnect")]
+    public async Task<IActionResult> DisconnectTrello()
+        => new JsonResult(await _trelloConnectionService.Disconnect(GetCurrentUserId()));
 
     [Authorize]
     [HttpGet("all")]
@@ -54,4 +91,14 @@ public class UserController : ControllerBase
     public async Task<IActionResult> DeleteUser(int id)
      => new JsonResult(await _userService.DeleteUser(id));
 
+    private int GetCurrentUserId()
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("userId");
+        if (!int.TryParse(userId, out var parsedUserId))
+        {
+            throw new UnauthorizedAccessException("Authenticated user id is missing.");
+        }
+
+        return parsedUserId;
+    }
 }

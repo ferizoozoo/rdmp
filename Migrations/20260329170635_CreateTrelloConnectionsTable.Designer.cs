@@ -3,6 +3,7 @@ using System;
 using Data.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace rdmp.Migrations
 {
     [DbContext(typeof(RdmpContext))]
-    partial class RdmpContextModelSnapshot : ModelSnapshot
+    [Migration("20260329170635_CreateTrelloConnectionsTable")]
+    partial class CreateTrelloConnectionsTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.4");

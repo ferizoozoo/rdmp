@@ -3,6 +3,7 @@ using System;
 using Data.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace rdmp.Migrations
 {
     [DbContext(typeof(RdmpContext))]
-    partial class RdmpContextModelSnapshot : ModelSnapshot
+    [Migration("20260329163745_AddTrelloFieldsToUserEntity")]
+    partial class AddTrelloFieldsToUserEntity
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.4");
@@ -38,37 +41,6 @@ namespace rdmp.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("Roadmaps");
-                });
-
-            modelBuilder.Entity("Data.Entities.TrelloConnection", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime>("ConnectedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("MemberId")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Token")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Username")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("TrelloConnections");
                 });
 
             modelBuilder.Entity("Data.Entities.User", b =>
@@ -102,23 +74,24 @@ namespace rdmp.Migrations
                     b.Property<DateTime?>("RefreshTokenExpiry")
                         .HasColumnType("TEXT");
 
+                    b.Property<DateTime?>("TrelloConnectedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("TrelloMemberId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("TrelloToken")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("TrelloUsername")
+                        .HasColumnType("TEXT");
+
                     b.HasKey("Id");
 
                     b.ToTable("Users");
                 });
 
             modelBuilder.Entity("Data.Entities.Roadmap", b =>
-                {
-                    b.HasOne("Data.Entities.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("Data.Entities.TrelloConnection", b =>
                 {
                     b.HasOne("Data.Entities.User", "User")
                         .WithMany()
